@@ -1,3 +1,4 @@
+const path = require('path');
 const {fork} = require('child_process');
 const chokidar = require('chokidar');
 const {app, BrowserWindow} = require('electron');
@@ -7,10 +8,16 @@ const browserWindows = [];
 
 const softResetHandler = () => browserWindows.forEach(bw => bw.webContents.reloadIgnoringCache());
 const watcher = chokidar.watch(['src/**']);
+let child;
 
 // Enable default soft reset
 watcher.on('change', () => {
-  const child = fork('scripts/build.js', ['--profile']);
+  if(child) {
+    console.log(child);
+    child.kill(2);
+  }
+
+  child = fork('scripts/start-e.js');
   child.on('close', (code, signal) => {
     if(code === null) {
       softResetHandler();
@@ -42,9 +49,9 @@ let win;
 function createWindow() {
   // Создаём окно браузера.
   win = new BrowserWindow({
-
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
