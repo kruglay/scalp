@@ -274,8 +274,8 @@ class Scalp {
     this.quantity = quantity;
     this.symbol = symbol;
     this.openRate = openRate;
-    this.closeAsksRate = closeAsksRate;
-    this.reopenAsksRate = reopenAsksRate;
+    this.closeAsksRate = closeAsksRate;//для закрытия по маркету
+    this.reopenAsksRate = reopenAsksRate;//
     this.closeBidsRate = closeBidsRate;
     this.minQuantityRate = minQuantityRate;
     this.askOrders = [];
@@ -587,8 +587,6 @@ class Scalp {
         await asyncSetTimeOut(tick, 500);
       }
     };
-
-
     const request = async () => await this.binance.exchangeInfo();
     const func = async (res) => {
       this.symbolInfo = res.symbols.find(el => el.symbol === this.symbol);
@@ -680,7 +678,7 @@ class Scalp {
 
               //на текущий момент сделаем так, что пока полностью не выкуплен ордер открываться аск ордер не будет
               // if (this.fillsQty.gte(this.minQty)) {
-              if(orderStatus === 'FILLED') {
+              if (orderStatus === 'FILLED') {
                 this.openAskOrder(price, orderStatus);
               }
             }
@@ -728,14 +726,15 @@ class Scalp {
     });
 
     await tick();
+    return true;
   };
 
   async stopScalping(hard = false) {
-    if(this.bidOrders.length > 0) {
+    if (this.bidOrders.length > 0) {
       this.tasksQueue = [];//delete all tasks
       this.bidOrders.forEach(order => {
         let request = async () => await this.binance.cancelOrder({
-          symbol,
+          symbol: this.symbol,
           orderId: order.orderId
         });
 
@@ -743,7 +742,7 @@ class Scalp {
         let func = async (res) => {
 
           try {
-            await this.snapShot(logDoc.insertedId, 'STOP', {
+            await this.snapShot(undefined, 'STOP', {
               order: order,
               depth: this.partialDepth
             });
@@ -752,7 +751,7 @@ class Scalp {
           }
 
           this.bidOrders = this.bidOrders.filter(el => el.orderId !== order.orderId);
-          if(this.bidOrders.length === 0) {
+          if (this.bidOrders.length === 0) {
             this.state.setStep(STOP);
           }
         };
@@ -766,8 +765,8 @@ class Scalp {
       });
       this.stop = true;
     } else if (this.askOrders.length > 0) {
-      if(hard) {
-        this.stop = true;
+      this.stop = true;
+      if (hard) {
         this.state.setStep(STOP);
       }
     }
@@ -790,7 +789,7 @@ class Scalp {
     const byLimit = [], byMarket = [];
     for (let el of this.askOrders) {
       if (bigNumber(el.bidOrders[0].price).minus(this.partialDepth.bids[0].price).eq(this.tickSize)) {
-        // в случае если количество упали ниже задонного алгоритмом будем закрывать по маркету
+        // в случае если количество упали ниже заданного алгоритмом будем закрывать по маркету
         if (Number(this.partialDepth.bids[0].quantity) <= Math.max(maxQty, this.minQuantityRate * (Number(el.origQty) - Number(el.executedQty)))) {
           byMarket.push({type: 'MARKET', order: el});
         } else if (!bigNumber(this.partialDepth.asks[0].price).eq(el.price) && Number(this.partialDepth.asks[0].quantity) >= Number(this.partialDepth.bids[0].quantity * this.reopenAsksRate)) {
@@ -860,9 +859,13 @@ class Scalp {
       instance: {quantity, symbol, askOrders, bidOrders, partialDepth, bidData, meanSellQty, fills, fillsQty, stop},
       comment
     }).then(
-      res => this.db.collection('text_logs').findOneAndUpdate({_id: insertedId}, {
-        $set: {logId: res.insertedId}
-      }));
+      res => {
+        if(insertedId) {
+          this.db.collection('text_logs').findOneAndUpdate({_id: insertedId}, {
+            $set: {logId: res.insertedId}
+          });
+        }
+      });
   };
 
   logError(err) {

@@ -79,6 +79,7 @@
     "start": "node scripts/start.js",
     "build-c": "node scripts/build.js --profile",
     "start-e": "node scripts/start-e.js && electron .",
+    "start-t": "node scripts/start-e.js && TEST=true electron .",
     "build": "electron .",
     "build-electron": "node scripts/buildWatch.js --profile",
     "test": "node scripts/test.js"

@@ -2,12 +2,15 @@ import './App.css';
 
 import React, {useState, useEffect} from 'react';
 import {MemoryRouter as Router, Route, NavLink} from 'react-router-dom';
-import {Menu, Spin} from 'antd';
+import {Menu, Spin, Tabs} from 'antd';
 
 import OrderHistory from 'components/OrderHistory';
 import OpenOrders from 'components/OpenOrders';
 import Scalp from 'components/ScalpComponent';
 import showMessage from 'utils/showMessage';
+import Test from 'Test';
+
+const {TabPane} = Tabs;
 
 const App = (props) => {
   const [selectedKey, setSelectedKey] = useState(['scalp']);
@@ -34,37 +37,23 @@ const App = (props) => {
 
   return (
     <Spin className="App" spinning={spining} tip="Loading..." size="large">
-      <Router
-        initialEntries={['/scalp']}
-        initialIndex={1}
+      <Tabs
+        defaultActiveKey={'scalp'}
       >
-        <Menu
-          theme="light"
-          mode="horizontal"
-          style={{lineHeight: '32px'}}
-          selectedKeys={selectedKey}
-          onClick={(e) => setSelectedKey([e.key])}
-        >
-          <Menu.Item key="scalp">
-            <NavLink to="/scalp">
-              Scalp
-            </NavLink>
-          </Menu.Item>
-          <Menu.Item key="orderHistory">
-            <NavLink to='/order-history'>
-              Order history
-            </NavLink>
-          </Menu.Item>
-          <Menu.Item key="openOrders">
-            <NavLink to='/open-orders'>
-              Open orders
-            </NavLink>
-          </Menu.Item>
-        </Menu>
-        <Route path="/scalp" render={(props) => <Scalp {...props}/>}/>
-        <Route path="/order-history" render={(props) => <OrderHistory {...props}/>}/>
-        <Route path="/open-orders" render={(props) => <OpenOrders {...props}/>}/>
-      </Router>
+        <TabPane tab="Scalp" key="scalp">
+          <Scalp/>
+        </TabPane>
+        {
+          window.process.env.TEST &&
+          <TabPane tab="Test" key="test">
+            <Test/>
+          </TabPane>
+        }
+        <TabPane tab="Order history" key="orderHistory">
+          <OrderHistory/>
+        </TabPane>
+
+      </Tabs>
     </Spin>
   );
 };

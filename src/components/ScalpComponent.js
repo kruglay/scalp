@@ -17,11 +17,12 @@ class ScalpComponent extends Component {
       disabledTradeSettings: false,
       showInfo: false,
     };
+    this.scalp = {state: {}};
   }
 
   handleSubmit = (e) => {
     e.preventDefault();
-    this.props.form.validateFields(async (err, values) => {
+    this.props.form.validateFields((err, values) => {
       if (!err) {
         const {
           symbol,
@@ -44,10 +45,16 @@ class ScalpComponent extends Component {
         this.setState({showInfo: true});
         try {
           this.setState({loading: true});
-          await this.scalp.start();
           this.setState({
             disabledTradeSettings: true,
-          })
+          });
+          this.scalp.start()
+            .then(res => {
+              this.setState({disabledTradeSettings: false})
+            })
+            .catch(err => showMessage('error', err.message));
+          console.log('after scalp');
+
         } catch (e) {
           showMessage('error', e.message);
           console.error(e);
@@ -64,16 +71,17 @@ class ScalpComponent extends Component {
     return () => {
       let set = false;
       validateFields([name], (err, values) => {
-        if(!err) {
+        if (!err) {
           set = true;
           scalp[name] = Number(values[name]);
         }
       });
       return set;
-    }
+    };
   };
 
   render() {
+    const test = !!window.process.env.TEST;
     const {
       loading,
       disabledTradeSettings,
@@ -86,6 +94,7 @@ class ScalpComponent extends Component {
         <Form onSubmit={this.handleSubmit}>
           <Form.Item label="Trade pair">
             {getFieldDecorator('symbol', {
+              initialValue: test ? 'TRXBTC' : undefined,
               rules: [
                 {
                   required: true,
@@ -98,6 +107,7 @@ class ScalpComponent extends Component {
           </Form.Item>
           <Form.Item label="Quantity">
             {getFieldDecorator('quantity', {
+              initialValue: test ? '500' : undefined,
               rules: [
                 {
                   required: true,
@@ -173,14 +183,28 @@ class ScalpComponent extends Component {
               <InputRate min={0.1} precision={2} setRate={this.setRate('minQuantityRate')} style={{width: '100%'}}/>
             )}
           </Form.Item>
-          <Button htmlType="submit" type="primary" loading={loading}>Start</Button>
+          <Form.Item>
+            <Button
+              htmlType="submit"
+              type="primary"
+              loading={['START', 'INIT'].includes(this.scalp.state.step)}
+              style={{width: '8rem'}}
+            >
+              Start
+            </Button>
+            <Button
+              onClick={() => this.scalp.stopScalping()}
+              style={{marginLeft: '1rem', width: '8rem'}}
+            >
+              Stop
+            </Button>
+          </Form.Item>
+
         </Form>
-        {
-          showInfo && <Fragment>
-            <div className="scalp-step">{this.scalp.state.step}</div>
-            <div className="scalp-mean-sell">{this.scalp.meanSellQty}</div>
-          </Fragment>
-        }
+        <Fragment>
+          <div className="scalp-step">{this.scalp.state.step}</div>
+          <div className="scalp-mean-sell">{this.scalp.meanSellQty}</div>
+        </Fragment>
       </div>
     );
   }
