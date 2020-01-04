@@ -1,6 +1,8 @@
+import './scalpComponent.css';
+
 import React, {Component, Fragment} from 'react';
 import {observer} from 'mobx-react';
-import {Form, Button, Input, InputNumber} from 'antd';
+import {Form, Button, Input, InputNumber, Divider} from 'antd';
 
 import Scalp from 'utils/Scalp';
 import showMessage from 'utils/showMessage';
@@ -92,113 +94,162 @@ class ScalpComponent extends Component {
     return (
       <div className="scalp">
         <Form onSubmit={this.handleSubmit}>
-          <Form.Item label="Trade pair">
-            {getFieldDecorator('symbol', {
-              initialValue: test ? 'TRXBTC' : undefined,
-              rules: [
-                {
-                  required: true,
-                  message: 'Please input trade pair'
-                }
-              ],
-            })(
-              <Input disabled={disabledTradeSettings}/>,
-            )}
-          </Form.Item>
-          <Form.Item label="Quantity">
-            {getFieldDecorator('quantity', {
-              initialValue: test ? '500' : undefined,
-              rules: [
-                {
-                  required: true,
-                  message: 'Please input quantity'
-                }
-              ],
-            })(
-              <InputNumber disabled={disabledTradeSettings} min={0.1} style={{width: '100%'}}/>,
-            )}
-          </Form.Item>
-          <Form.Item label="Open rate">
-            {getFieldDecorator('openRate', {
-              initialValue: 4,
-              rules: [
-                {
-                  required: true,
-                  message: 'Please input rate'
-                }
-              ],
-            })(
-              <InputRate min={0.1} precision={2} setRate={this.setRate('openRate')} style={{width: '100%'}}/>
-            )}
-          </Form.Item>
-          <Form.Item label="Close asks rate">
-            {getFieldDecorator('closeAsksRate', {
-              initialValue: 0.5,
-              rules: [
-                {
-                  required: true,
-                  message: 'Please input rate'
-                }
-              ],
-            })(
-              <InputRate min={0.1} precision={2} setRate={this.setRate('closeAsksRate')} style={{width: '100%'}}/>
-            )}
-          </Form.Item>
-          <Form.Item label="Close bids rate">
-            {getFieldDecorator('closeBidsRate', {
-              initialValue: 1.5,
-              rules: [
-                {
-                  required: true,
-                  message: 'Please input rate'
-                }
-              ],
-            })(
-              <InputRate min={0.1} precision={2} setRate={this.setRate('closeBidsRate')} style={{width: '100%'}}/>
-            )}
-          </Form.Item>
-          <Form.Item label="Reopen asks rate">
-            {getFieldDecorator('reopenAsksRate', {
-              initialValue: 0.15,
-              rules: [
-                {
-                  required: true,
-                  message: 'Please input rate'
-                }
-              ],
-            })(
-              <InputRate min={0.1} precision={2} setRate={this.setRate('reopenAsksRate')} style={{width: '100%'}}/>
-            )}
-          </Form.Item>
-          <Form.Item label="Min quantity rate">
-            {getFieldDecorator('minQuantityRate', {
-              initialValue: 2,
-              rules: [
-                {
-                  required: true,
-                  message: 'Please input rate'
-                }
-              ],
-            })(
-              <InputRate min={0.1} precision={2} setRate={this.setRate('minQuantityRate')} style={{width: '100%'}}/>
-            )}
-          </Form.Item>
-          <Form.Item>
-            <Button
-              htmlType="submit"
-              type="primary"
-              loading={['START', 'INIT'].includes(this.scalp.state.step)}
-              style={{width: '8rem'}}
-            >
-              Start
-            </Button>
-            <Button
-              onClick={() => this.scalp.stopScalping()}
-              style={{marginLeft: '1rem', width: '8rem'}}
-            >
-              Stop
-            </Button>
-          </Form.Item>
+          <div className="trade-pair">
+            <Form.Item label="Trade pair">
+              {getFieldDecorator('symbol', {
+                initialValue: test ? 'TRXBTC' : undefined,
+                rules: [
+                  {
+                    required: true,
+                    message: 'Please input trade pair'
+                  }
+                ],
+              })(
+                <Input disabled={disabledTradeSettings}/>,
+              )}
+            </Form.Item>
+            <Form.Item label="Quantity" className="trade-pair-quantity">
+              {getFieldDecorator('quantity', {
+                initialValue: test ? '500' : undefined,
+                rules: [
+                  {
+                    required: true,
+                    message: 'Please input quantity'
+                  }
+                ],
+              })(
+                <InputNumber disabled={disabledTradeSettings} min={0.1} style={{width: '100%'}}/>,
+              )}
+            </Form.Item>
+          </div>
+          <Divider orientation="left">Rates</Divider>
+          <div className="trades-rates">
+            <div className="trade-rates-left">
+              <Form.Item label="Open rate">
+                {getFieldDecorator('openRate', {
+                  initialValue: 4,
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Please input rate'
+                    }
+                  ],
+                })(
+                  <InputRate
+                    min={0.1}
+                    precision={2}
+                    setRate={this.setRate('openRate')}
+                    style={{width: '100%'}}
+                    rateValue={0}
+                  />
+                )}
+              </Form.Item>
+              <Form.Item label="Close asks rate">
+                {getFieldDecorator('closeAsksRate', {
+                  initialValue: 0.5,
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Please input rate'
+                    }
+                  ],
+                })(
+                  <InputRate
+                    min={0.1}
+                    precision={2}
+                    setRate={this.setRate('closeAsksRate')}
+                    style={{width: '100%'}}
+                    rateValue={0}
+                  />
+                )}
+              </Form.Item>
+              <Form.Item label="Close bids rate">
+                {getFieldDecorator('closeBidsRate', {
+                  initialValue: 1.5,
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Please input rate'
+                    }
+                  ],
+                })(
+                  <InputRate
+                    min={0.1}
+                    precision={2}
+                    setRate={this.setRate('closeBidsRate')}
+                    style={{width: '100%'}}
+                    rateValue={0}
+                  />
+                )}
+              </Form.Item>
+            </div>
+            <div className="trades-rates-center">
+              <Form.Item label="Reopen asks rate">
+                {getFieldDecorator('reopenAsksRate', {
+                  initialValue: 0.15,
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Please input rate'
+                    }
+                  ],
+                })(
+                  <InputRate
+                    min={0.1}
+                    precision={2}
+                    setRate={this.setRate('reopenAsksRate')}
+                    style={{width: '100%'}}
+                    rateValue={0}
+                  />
+                )}
+              </Form.Item>
+              <Form.Item label="Min quantity rate">
+                {getFieldDecorator('minQuantityRate', {
+                  initialValue: 2,
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Please input rate'
+                    }
+                  ],
+                })(
+                  <InputRate
+                    min={0.1}
+                    precision={2}
+                    setRate={this.setRate('minQuantityRate')}
+                    style={{width: '100%'}}
+                    rateValue={0}
+                  />
+                )}
+              </Form.Item>
+            </div>
+            <div className="trades-rates-actions">
+              <Button
+                type="primary"
+                style={{width: '8rem'}}
+              >
+                Get mean
+              </Button>
+              <Button
+                htmlType="submit"
+                type="primary"
+                loading={['START', 'INIT'].includes(this.scalp.state.step)}
+                style={{width: '8rem'}}
+                disabled={this.scalp.state.step && this.scalp.state.step !== 'STOP'}
+              >
+                Start
+              </Button>
+              <Button
+                onClick={() => this.scalp.stopScalping()}
+                style={{width: '8rem'}}
+                disabled={this.scalp.state.step === 'STOP'}
+              >
+                Stop
+              </Button>
+            </div>
+          </div>
+
+
 
         </Form>
         <Fragment>

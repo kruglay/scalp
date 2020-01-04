@@ -1,0 +1,22 @@
+.trade-pair {
+	display: flex;
+}
+
+.trade-pair-quantity {
+	margin-left: 1rem;
+}
+
+.trades-rates {
+	display: flex;
+	justify-content: space-between;
+	margin: 0 1rem;
+}
+
+.trades-rates-actions {
+	display: flex;
+	flex-direction: column;
+}
+
+.trades-rates-actions>button {
+	margin: 2rem 0;
+}

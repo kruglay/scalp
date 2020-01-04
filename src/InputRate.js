@@ -9,7 +9,8 @@ const InputRate = (props, ref) => {
     precision,
     value,
     onChange,
-    setRate
+    setRate,
+    rateValue
   } = props;
 
   const onClickEdit = (e) => {
@@ -33,8 +34,11 @@ const InputRate = (props, ref) => {
         value={value}
         disabled={disabled}
       />
-      <Button icon="edit" onClick={onClickEdit}/>
-      <Button onClick={onClickSet}>Set</Button>
+      <Button icon="edit" onClick={onClickEdit} style={{marginLeft: '0.5rem'}}/>
+      <Button onClick={onClickSet} style={{marginLeft: '0.5rem'}}>Set</Button>
+      <div className="rate-value">
+        {rateValue}
+      </div>
     </div>
   );
 };

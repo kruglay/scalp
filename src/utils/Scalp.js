@@ -284,12 +284,12 @@ class Scalp {
     this.partialDepth = {};
     this.bidData = {};
     this.count = 0;
-    this.tradeSubscribtion = null;
     this.db = db;
     this.binance = binance;
     this.fills = []; // need for askorders - bidorders connection
     this.fillsQty = 0;
     this.tasksQueue = [];
+    this.trades = [];
     this.state = {
       step: INIT,
       bidPrice: null,
@@ -543,11 +543,23 @@ class Scalp {
     }
   }
 
-  async setMeanSell() {
-    const trades = await this.binance.trades({symbol: this.symbol});
+  async setMeanSell(data) {
+    if(this.trades.length === 0) {
+      this.trades = await this.binance.trades({symbol: this.symbol});
+    } else {
+      this.trades.shift();
+      const el = {
+        id: data.tradeId,
+        price: data.price,
+        qty: data.quantity,
+        time: data.eventTime,
+        isBuyerMaker: data.maker,
+      };
+      this.trades.push(el);
+    }
     const volumes = [], volumesSell = [], volumesBuy = [];
     let meanBuyQty = 0;
-    for (let el of trades) {
+    for (let el of this.trades) {
       volumes.push(Number(el.qty));
       const value = Number(el.qty);
       if (el.isBuyerMaker) {
@@ -558,22 +570,23 @@ class Scalp {
     }
 
     this.meanSellQty = mean(volumesSell.sort((a, b) => a - b).slice(-10));//среднее значение маскимальных 10 продаж
-    meanBuyQty = mean(volumesBuy.sort((a, b) => a - b).slice(-10));//среднее значение маскимальных 10 покупок
-    if (this.count === 0) {
-      this.db.collection('trades').insertOne({
-        symbol: this.symbol,
-        volumesSell,
-        volumesBuy,
-        totalSell: volumesSell.reduce((prev, curr) => (prev + curr), 0),
-        totalBuy: volumesBuy.reduce((prev, curr) => (prev + curr), 0),
-        meanSellQty: this.meanSellQty,
-        meanBuyQty
-      });
-    } else if (this.count === 599) {
-      this.count = 0;
-    } else {
-      this.count++;
-    }
+    // meanBuyQty = mean(volumesBuy.sort((a, b) => a - b).slice(-10));//среднее значение маскимальных 10 покупок
+
+    // if (this.count === 0) {
+    //   this.db.collection('trades').insertOne({
+    //     symbol: this.symbol,
+    //     volumesSell,
+    //     volumesBuy,
+    //     totalSell: volumesSell.reduce((prev, curr) => (prev + curr), 0),
+    //     totalBuy: volumesBuy.reduce((prev, curr) => (prev + curr), 0),
+    //     meanSellQty: this.meanSellQty,
+    //     meanBuyQty
+    //   });
+    // } else if (this.count === 599) {
+    //   this.count = 0;
+    // } else {
+    //   this.count++;
+    // }
 
   }
 
@@ -608,8 +621,7 @@ class Scalp {
         }
       };
 
-      this.setMeanSell();
-      this.tradeSubscribtion = setInterval(this.setMeanSell.bind(this), 10000);
+      await this.setMeanSell();
 
       /////////////////websockets
       this.webSockets.push(
@@ -714,6 +726,12 @@ class Scalp {
         })
       );
 
+      this.webSockets.push(
+        await this.binance.ws.trades(this.symbol, data => {
+          this.setMeanSell(data);
+        })
+      );
+
       ////////////////////////websockets
       this.state.setStep(START);
     };
@@ -770,9 +788,6 @@ class Scalp {
         this.state.setStep(STOP);
       }
     }
-
-    clearInterval(this.tradeSubscribtion);
-
   };
 
   checkMinQty() {
@@ -851,7 +866,7 @@ class Scalp {
   };
 
   snapShot(insertedId, action, tables, comment) {
-    const {quantity, symbol, askOrders, bidOrders, webSockets, partialDepth, bidData, meanSellQty, tradeSubscribtion, fills, fillsQty, stop} = this;
+    const {quantity, symbol, askOrders, bidOrders, webSockets, partialDepth, bidData, meanSellQty, fills, fillsQty, stop} = this;
 
     this.db.collection('log').insertOne({
       action,
